@@ -24,28 +24,40 @@
             overflow-x: hidden;
         }
 
-        /* 80% Screen Grid Area */
+        /* --- GAME PAGE: 80% PROPORTIONAL GRID --- */
         #game-area { 
-            width: 85vw; 
-            height: 65vh; 
+            width: 80vw; 
+            height: 75vh; 
             display: flex; 
             flex-direction: column; 
             justify-content: center;
-            margin-top: 20px;
+            align-items: center;
+            margin: auto;
         }
 
         .grid { 
             display: grid; 
-            gap: 15px; /* Large gap for easier touch */
-            margin: 0 auto; 
+            gap: 2vh; /* Gap scales with screen height */
             width: 100%;
+            max-height: 100%;
         }
 
         .cell {
-            aspect-ratio: 1; background: #111; border: 3px solid #444; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 1.8rem; cursor: pointer; color: var(--text);
+            aspect-ratio: 1; 
+            background: #111; 
+            border: 3px solid #444; 
+            border-radius: 12px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-weight: 900; 
+            font-size: 5vh; /* Font scales with screen height */
+            cursor: pointer; 
+            color: var(--text);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
+        /* ---------------------------------------- */
+
         .cell.target { background: var(--accent) !important; color: #000 !important; border-color: #fff; }
         .cell.correct { background: var(--success) !important; color: #000 !important; }
         .cell.wrong { background: var(--fail) !important; }
@@ -66,14 +78,12 @@
         .top-bar { width: 100%; display: flex; justify-content: space-between; padding: 10px 20px; background: #000; }
         .btn-hc { background: var(--text); color: var(--bg); border: none; padding: 10px 15px; font-weight: 900; border-radius: 8px; cursor: pointer; }
         .btn-primary { width: 100%; padding: 18px; background: var(--success); color: #000; font-weight: 900; font-size: 1.4rem; border: none; border-radius: 15px; margin-top: 10px; cursor: pointer; }
-        .btn-share { background: var(--accent); color: #000; }
-
+        
         #game-header { width: 100%; padding: 10px; border-bottom: 4px solid var(--accent); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; font-weight: 900; }
         #timer-bar { width: 100%; height: 12px; background: #333; margin-top: 10px; border-radius: 10px; overflow: hidden; }
         #timer-fill { width: 100%; height: 100%; background: var(--accent); }
 
-        /* Profile List Styles */
         .profile-item { background: #111; border: 2px solid var(--text); padding: 10px; margin-bottom: 8px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
         .profile-info { flex-grow: 1; cursor: pointer; }
         .profile-actions { display: flex; gap: 5px; }
@@ -82,8 +92,7 @@
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; background: var(--bg); padding: 20px; }
         .hidden { display: none !important; }
         
-        #msg { text-align: center; font-weight: 900; font-size: 2rem; color: var(--accent); margin-top: 10px; min-height: 3rem; }
-        
+        #msg { text-align: center; font-weight: 900; font-size: 2.2rem; color: var(--accent); margin-top: 10px; min-height: 3rem; }
         #rules-box { margin-top: 15px; font-size: 0.85rem; color: #ccc; border-top: 1px solid #444; padding-top: 10px; }
     </style>
 </head>
@@ -122,7 +131,7 @@
                 <h2 id="dash-name" style="color: var(--accent); margin:0;"></h2>
                 <button class="btn-primary" onclick="startAt(state.level)">繼續挑戰 / RESUME</button>
                 <button class="btn-primary" style="background: var(--accent);" onclick="startAt(1)">從頭開始 / START OVER</button>
-                <button class="btn-primary btn-share" onclick="shareGame()">🔗 分享遊戲 / SHARE</button>
+                <button class="btn-primary" style="background: var(--accent); color: #000;" onclick="shareGame()">🔗 分享遊戲 / SHARE</button>
                 <button class="btn-hc" style="width:100%; margin-top:10px;" onclick="location.reload()">返回 / BACK</button>
             </div>
 
@@ -144,7 +153,6 @@
             <h1 style="color: var(--gold); margin:0;">階段完成 TIER CLEAR!</h1>
             <div id="tier-report" style="margin: 20px 0; font-size: 1.2rem; line-height: 1.5;"></div>
             <button class="btn-primary" onclick="closeTierGate()">進入下一階段 PROCEED</button>
-            <button class="btn-primary btn-share" onclick="shareGame()">🔗 分享戰績 / SHARE</button>
         </div>
     </div>
 
@@ -164,14 +172,14 @@
     <script>
         const i18n = {
             en: {
-                rules: ["Memory: Watch the highlighted numbers.", "Play: Numbers stay visible. Click the ones you saw.", "Scaling: Grid grows every 10 levels (80% screen max).", "Timer: Dynamic (3s + 0.4s per target)."],
+                rules: ["Memory: Locations flash briefly.", "Play: Numbers stay visible. Click the ones you saw.", "Scaling: Grid fills 80% of any screen.", "Timer: 3s + 0.4s per target number."],
                 eldHint: (x, y) => `Found ${x}, ${y} left!`,
                 mem: (n) => `MEMORIZE... (${n}s)`,
-                tierMsg: (lvl, targets, grids) => `Prepare for Level ${lvl}!<br>Next challenge: Find <b style="color:var(--accent)">${targets}</b> numbers in a <b style="color:var(--accent)">${grids}</b> grid.`,
-                shareMsg: (lvl) => `I reached Level ${lvl} in Snapshot Blitz! Can you beat me? `
+                tierMsg: (lvl, targets, grids) => `Prepare for Level ${lvl}!<br>Next challenge: Find <b style="color:var(--accent)">${targets}</b> numbers in a <b style="color:var(--accent)">${grids}</b> grid area.`,
+                shareMsg: (lvl) => `I reached Level ${lvl} in Snapshot Blitz! Can you beat my memory? `
             },
             big5: {
-                rules: ["記憶：記住閃爍的目標號碼位置。", "點擊：號碼全程顯示，請選出剛才看到的號碼。", "規模：每10關擴大網格 (保持螢幕 80% 大小)。", "時間：動態計算 (3秒基礎 + 每個目標0.4秒)。"],
+                rules: ["記憶：記住閃爍的目標號碼位置。", "點擊：號碼全程顯示，請選出剛才看到的號碼。", "規模：網格自動適應螢幕 80% 大小。", "時間：動態計算 (3秒基礎 + 每個目標0.4秒)。"],
                 eldHint: (x, y) => `已找到 ${x} 個，還剩 ${y} 個！`,
                 mem: (n) => `記憶中... (${n}秒)`,
                 tierMsg: (lvl, targets, grids) => `準備進入第 ${lvl} 關！<br>下個挑戰：在 <b style="color:var(--accent)">${grids}</b> 格中找出 <b style="color:var(--accent)">${targets}</b> 個目標。`,
@@ -224,7 +232,7 @@
             document.getElementById('profile-create-view').classList.remove('hidden');
         }
 
-        function deleteProfile(i) { if(confirm("確定刪除? Delete?")) { profiles.splice(i,1); localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); loadProfiles(); } }
+        function deleteProfile(i) { if(confirm("確定刪除?")) { profiles.splice(i,1); localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); loadProfiles(); } }
         function showCreateView() { editingIdx = -1; document.getElementById('in-name').value = ''; document.getElementById('profile-select-view').classList.add('hidden'); document.getElementById('profile-create-view').classList.remove('hidden'); }
         function cancelCreate() { document.getElementById('profile-create-view').classList.add('hidden'); document.getElementById('profile-select-view').classList.remove('hidden'); }
         
@@ -337,7 +345,7 @@
         function shareGame() {
             const url = window.location.href;
             const text = i18n[lang].shareMsg(state.level) + url;
-            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard! 已複製連結！"));
+            navigator.clipboard.writeText(text).then(() => alert("已複製連結！Copied link!"));
         }
 
         loadProfiles();
