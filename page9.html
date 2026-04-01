@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snapshot Blitz | Professional Edition</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --glass: rgba(30, 30, 30, 0.95);
+            --accent: #00eaff; /* Cyan */
+            --success: #00ff41; /* Green */
+            --fail: #ff003c; /* Red */
+            --text: #ffffff;
+            --gold: #ffff00;
+            --base-font: 1.25rem; /* +25% Font Size */
+        }
+
+        /* Responsive & High Contrast Base */
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; transition: 0.2s; }
+        body { 
+            background: radial-gradient(circle at top, #1a1a1a, #000000); 
+            color: var(--text); margin: 0; font-size: var(--base-font);
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating Hint Box (Elderly Mode) */
+        #elderly-hint-box {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--gold); color: #000; padding: 18px 25px;
+            border-radius: 50px; font-weight: 900; font-size: 1.3rem;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.5); z-index: 500;
+            text-align: center; border: 4px solid #000; display: none;
+            animation: float 2.5s infinite ease-in-out; width: 90%; max-width: 450px;
+        }
+        @keyframes float { 0%, 100% { bottom: 30px; } 50% { bottom: 45px; } }
+
+        /* Main Page Layout */
+        .glass-card {
+            background: var(--glass); border: 3px solid var(--text);
+            border-radius: 24px; padding: 30px; width: 90%; max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 234, 255, 0.1); margin-top: 20px;
+        }
+
+        .top-bar { width: 100%; display: flex; justify-content: space-between; padding: 15px; }
+        .btn-hc { 
+            background: var(--text); color: var(--bg); border: none; 
+            padding: 10px 18px; font-weight: 900; cursor: pointer; border-radius: 8px; font-size: 1rem;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%; padding: 20px; background: var(--success); color: #000;
+            font-weight: 900; font-size: 1.5rem; border: none; border-radius: 15px;
+            cursor: pointer; margin-top: 15px; text-transform: uppercase;
+        }
+        .btn-primary:active { transform: scale(0.96); }
+
+        /* Header & Stats */
+        #game-header { width: 100%; padding: 15px; background: #000; border-bottom: 5px solid var(--accent); position: sticky; top: 0; z-index: 100; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; font-weight: 900; }
+        #timer-bar { width: 100%; height: 14px; background: #333; margin-top: 15px; border: 2px solid var(--text); border-radius: 10px; overflow: hidden; }
+        #timer-fill { width: 100%; height: 100%; background: var(--accent); }
+
+        /* Game Grid */
+        #game-area { width: 95%; max-width: 650px; padding: 20px 0; padding-bottom: 120px; }
+        .grid { display: grid; gap: 10px; margin: 0 auto; width: 100%; }
+        .cell {
+            aspect-ratio: 1; background: #111; border: 3px solid #444; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.8rem; cursor: pointer; color: var(--text);
+        }
+        .cell.target { background: var(--accent) !important; color: #000 !important; border-color: #fff; }
+        .cell.correct { background: var(--success) !important; color: #000 !important; border-color: #fff; }
+        .cell.wrong { background: var(--fail) !important; }
+        .cell.hide-text { color: transparent !important; }
+
+        /* Screens */
+        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; background: var(--bg); padding: 20px; }
+        .hidden { display: none !important; }
+
+        /* Profile List */
+        .profile-item {
+            background: #111; border: 2px solid var(--text); padding: 15px;
+            margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .profile-item:hover { border-color: var(--accent); background: #222; }
+    </style>
+</head>
+<body>
+
+    <div id="elderly-hint-box"></div>
+
+    <div class="top-bar">
+        <button class="btn-hc" onclick="toggleLang()">🌐 EN / 繁中</button>
+        <button id="btn-logout" class="btn-hc hidden" onclick="location.reload()">👤 SWITCH USER</button>
+    </div>
+
+    <div id="game-header" class="hidden">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <button id="eld-toggle" class="btn-hc" style="background:var(--gold);" onclick="toggleElderly()">長者模式: 關</button>
+        </div>
+        <div class="stats-grid">
+            <div><span id="txt-lvl">LVL</span><br><span id="cur-lvl">1</span></div>
+            <div id="timer-ui"><span id="txt-time">TIME</span><br><span id="cur-time">5.0</span>s</div>
+            <div><span id="txt-score">SCORE</span><br><span id="cur-score">0</span></div>
+        </div>
+        <div id="timer-bar"><div id="timer-fill"></div></div>
+    </div>
+
+    <div id="start-screen" class="screen">
+        <h1 style="color: var(--accent); letter-spacing: 4px;">SNAPSHOT BLITZ</h1>
+        <div class="glass-card">
+            <div id="profile-select-view">
+                <h3 id="txt-select-head" style="margin-top:0;">SELECT PROFILE</h3>
+                <div id="profile-list"></div>
+                <button class="btn-primary" onclick="showCreateView()" id="txt-new-btn">+ NEW PROFILE</button>
+            </div>
+
+            <div id="profile-dash-view" class="hidden">
+                <h2 id="dash-name" style="margin-top:0; color: var(--accent);"></h2>
+                <button class="btn-primary" onclick="startAt(state.level)" id="txt-resume-btn">RESUME MISSION</button>
+                <button class="btn-primary" style="background: var(--accent);" onclick="startAt(1)" id="txt-start-btn">START LVL 1</button>
+            </div>
+
+            <div id="profile-create-view" class="hidden">
+                <input type="text" id="in-name" placeholder="ENTER NAME" 
+                    style="width:100%; padding:15px; border-radius:10px; border:3px solid var(--text); background:#000; color:#fff; font-size:1.4rem; margin-bottom:15px;">
+                <button class="btn-primary" onclick="createProfile()">CREATE</button>
+            </div>
+
+            <div id="rules-box" style="margin-top: 20px; font-size: 0.95rem; color: #ccc; border-top: 2px solid #444; padding-top: 15px;">
+                <strong style="color: var(--gold);" id="txt-rule-head">DETAILED RULES:</strong>
+                <ul id="rule-list" style="padding-left: 20px; margin-top: 10px;"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="tier-screen" class="screen hidden">
+        <div class="glass-card" style="border-color: var(--gold); text-align:center;">
+            <h1 style="color: var(--gold);">TIER CLEARED!</h1>
+            <p id="tier-report" style="line-height:1.6;"></p>
+            <button class="btn-primary" onclick="closeTierGate()">PROCEED TO NEXT TIER</button>
+        </div>
+    </div>
+
+    <div id="fail-screen" class="screen hidden">
+        <div class="glass-card" style="border-color: var(--fail); text-align:center;">
+            <h1 style="color: var(--fail);">FAILED</h1>
+            <button class="btn-primary" onclick="runRound()">RETRY</button>
+            <button class="btn-hc" style="width:100%; margin-top:20px;" onclick="location.reload()">QUIT</button>
+        </div>
+    </div>
+
+    <div id="game-area" class="hidden">
+        <div id="grid-container" class="grid"></div>
+        <div id="msg" style="text-align: center; margin-top: 25px; font-weight: 900; font-size: 2.2rem; color: var(--accent);"></div>
+    </div>
+
+    <script>
+        const i18n = {
+            en: {
+                select: "SELECT PROFILE", new: "+ NEW PROFILE", resume: "RESUME MISSION", 
+                start: "START LVL 1", lvl: "LVL", time: "TIME", score: "SCORE",
+                ruleHead: "GAME MECHANICS:",
+                rules: [
+                    "Memory: 5 targets flash for 2 seconds.",
+                    "Blitz: Click correct tiles within 5 seconds.",
+                    "Progression: Grid grows every 10 levels (Max 100).",
+                    "Difficulty: Density scales from 20% to 40%."
+                ],
+                eldOn: "Elderly Mode: ON", eldOff: "Elderly Mode: OFF",
+                eldHint: (x, y) => `Great job! You found ${x}, pick ${y} more to win!`,
+                tierMsg: (lvl, grid) => `Tier cleared! Moving to Level ${lvl}. Grid expanding to ${grid} cells.`,
+                mem: "MEMORIZE...", go: "GO!", clear: "CLEAR!"
+            },
+            big5: {
+                select: "選擇使用者", new: "+ 新建檔案", resume: "繼續挑戰", 
+                start: "第一關開始", lvl: "等級", time: "時間", score: "分數",
+                ruleHead: "遊戲詳細規則：",
+                rules: [
+                    "記憶：5個目標會閃爍顯示 2秒。",
+                    "點擊：必須在 5秒內點選正確方格。",
+                    "進度：每過10關，網格會擴大（最高100格）。",
+                    "難度：目標比例由 20% 增加至 40%。"
+                ],
+                eldOn: "長者模式: 開", eldOff: "長者模式: 關",
+                eldHint: (x, y) => `你很厲害，已經選中了 ${x} 個字，再選 ${y} 個字，就可以過關了！`,
+                tierMsg: (lvl, grid) => `階段完成！即將進入第 ${lvl} 關。網格擴張至 ${grid} 格。`,
+                mem: "記憶中...", go: "開始！", clear: "過關！"
+            }
+        };
+
+        let lang = 'big5';
+        let profiles = [];
+        let curIdx = -1;
+        let isElderly = false;
+        let state = { level: 1, score: 0, targets: [], found: 0, status: 'idle' };
+        let gameTimer;
+
+        function toggleLang() { lang = (lang === 'en') ? 'big5' : 'en'; renderUI(); loadProfiles(); }
+
+        function renderUI() {
+            const t = i18n[lang];
+            document.getElementById('txt-select-head').innerText = t.select;
+            document.getElementById('txt-new-btn').innerText = t.new;
+            document.getElementById('txt-resume-btn').innerText = t.resume;
+            document.getElementById('txt-start-btn').innerText = t.start;
+            document.getElementById('txt-lvl').innerText = t.lvl;
+            document.getElementById('txt-time').innerText = t.time;
+            document.getElementById('txt-score').innerText = t.score;
+            document.getElementById('txt-rule-head').innerText = t.ruleHead;
+            document.getElementById('rule-list').innerHTML = t.rules.map(r => `<li>${r}</li>`).join('');
+            if(isElderly) document.getElementById('eld-toggle').innerText = t.eldOn;
+        }
+
+        function loadProfiles() {
+            const saved = localStorage.getItem('blitz_v_final');
+            profiles = saved ? JSON.parse(saved) : [];
+            const list = document.getElementById('profile-list');
+            list.innerHTML = '';
+            profiles.forEach((p, i) => {
+                const d = document.createElement('div');
+                d.className = 'profile-item';
+                d.innerHTML = `<strong>${p.name}</strong> <span>LVL ${p.maxLvl} ▶</span>`;
+                d.onclick = () => selectProfile(i);
+                list.appendChild(d);
+            });
+            renderUI();
+        }
+
+        function toggleElderly() {
+            isElderly = !isElderly;
+            document.getElementById('eld-toggle').innerText = isElderly ? i18n[lang].eldOn : i18n[lang].eldOff;
+            document.getElementById('timer-bar').style.visibility = isElderly ? 'hidden' : 'visible';
+            document.getElementById('timer-ui').style.visibility = isElderly ? 'hidden' : 'visible';
+            updateHint();
+        }
+
+        function updateHint() {
+            const box = document.getElementById('elderly-hint-box');
+            if(isElderly && state.status === 'play') {
+                box.innerText = i18n[lang].eldHint(state.found, state.targets.length - state.found);
+                box.style.display = 'block';
+            } else box.style.display = 'none';
+        }
+
+        function selectProfile(i) {
+            curIdx = i;
+            state.level = profiles[i].maxLvl;
+            document.getElementById('dash-name').innerText = profiles[i].name;
+            document.getElementById('profile-select-view').classList.add('hidden');
+            document.getElementById('profile-dash-view').classList.remove('hidden');
+            document.getElementById('btn-logout').classList.remove('hidden');
+        }
+
+        function showCreateView() { document.getElementById('profile-select-view').classList.add('hidden'); document.getElementById('profile-create-view').classList.remove('hidden'); }
+
+        function createProfile() {
+            const n = document.getElementById('in-name').value.trim();
+            if(!n) return;
+            profiles.push({ name: n, maxLvl: 1 });
+            localStorage.setItem('blitz_v_final', JSON.stringify(profiles));
+            location.reload();
+        }
+
+        function startAt(lvl) {
+            state.level = lvl;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-header').classList.remove('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            runRound();
+        }
+
+        function runRound() {
+            clearInterval(gameTimer);
+            state.found = 0; state.status = 'mem'; updateHint();
+            document.getElementById('fail-screen').classList.add('hidden');
+            
+            const tier = Math.floor((state.level - 1) / 10);
+            const gridCells = Math.min(100, 25 + (tier * 15));
+            const density = Math.min(0.40, 0.20 + (((state.level - 1) % 10) * 0.02));
+            const tCount = Math.floor(gridCells * density);
+
+            initGrid(gridCells, tCount);
+            document.getElementById('msg').innerText = i18n[lang].mem;
+            document.getElementById('cur-lvl').innerText = state.level;
+
+            setTimeout(() => {
+                state.status = 'play'; updateHint();
+                document.querySelectorAll('.cell').forEach(c => { c.classList.add('hide-text'); c.classList.remove('target'); });
+                document.getElementById('msg').innerText = i18n[lang].go;
+                if(!isElderly) startCountdown();
+            }, 2000);
+        }
+
+        function initGrid(count, tCount) {
+            const g = document.getElementById('grid-container');
+            g.innerHTML = '';
+            const cols = Math.ceil(Math.sqrt(count));
+            g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            const p = Array.from({length: count}, (_, i) => i + 1).sort(() => 0.5 - Math.random());
+            state.targets = p.slice(0, tCount);
+            for(let i=1; i<=count; i++) {
+                const c = document.createElement('div');
+                c.className = 'cell'; c.innerText = i;
+                if(state.targets.includes(i)) c.classList.add('target');
+                c.onclick = () => {
+                    if(state.status !== 'play' || c.classList.contains('correct')) return;
+                    if(state.targets.includes(i)) {
+                        c.classList.remove('hide-text'); c.classList.add('correct');
+                        state.found++; updateHint();
+                        if(state.found === state.targets.length) win();
+                    } else { c.classList.add('wrong'); if(!isElderly) fail(); }
+                };
+                g.appendChild(c);
+            }
+        }
+
+        function startCountdown() {
+            let s = 5.0;
+            gameTimer = setInterval(() => {
+                s -= 0.1;
+                document.getElementById('cur-time').innerText = Math.max(0, s).toFixed(1);
+                document.getElementById('timer-fill').style.width = (s/5 * 100) + "%";
+                if(s <= 0) fail();
+            }, 100);
+        }
+
+        function win() {
+            clearInterval(gameTimer); state.status = 'idle'; updateHint();
+            document.getElementById('msg').innerText = i18n[lang].clear;
+            if(state.level % 10 === 0) {
+                const nextGrid = Math.min(100, 25 + (Math.floor(state.level/10) * 15));
+                document.getElementById('tier-report').innerText = i18n[lang].tierMsg(state.level + 1, nextGrid);
+                document.getElementById('tier-screen').classList.remove('hidden');
+            } else { state.level++; save(); setTimeout(runRound, 800); }
+        }
+
+        function closeTierGate() { state.level++; save(); document.getElementById('tier-screen').classList.add('hidden'); runRound(); }
+        function save() { if(state.level > profiles[curIdx].maxLvl) { profiles[curIdx].maxLvl = state.level; localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); } }
+        function fail() { clearInterval(gameTimer); state.status = 'idle'; updateHint(); document.getElementById('fail-screen').classList.remove('hidden'); }
+
+        loadProfiles();
+    </script>
+</body>
+</html>
