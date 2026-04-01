@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snapshot Blitz | Ultimate Edition</title>
+    <title>Snapshot Blitz | Professional Edition</title>
     <style>
         :root {
             --bg: #000000;
@@ -13,7 +13,7 @@
             --fail: #ff003c;
             --text: #ffffff;
             --gold: #ffff00;
-            --base-font: 1.2rem;
+            --base-font: 1.1rem;
         }
 
         * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; touch-action: manipulation; }
@@ -24,59 +24,37 @@
             height: 100vh; width: 100vw; overflow: hidden;
         }
 
-        /* --- GAME PAGE: ONE-SCREEN AUTO FIT --- */
+        /* --- ONE-SCREEN GAME AREA --- */
         #game-area { 
-            width: 80vw; 
-            /* Subtract header height (~160px) and message height (~40px) to force one screen */
-            height: calc(100vh - 200px); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center;
-            align-items: center;
+            width: 90vw; 
+            height: calc(100vh - 220px); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             margin: auto;
         }
 
         .grid { 
-            display: grid; 
-            gap: 1.5vmin; 
-            width: 100%;
-            height: 100%;
-            max-height: 100%;
-            place-content: center;
+            display: grid; gap: 1.5vmin; width: 100%; height: 100%;
+            grid-auto-rows: 1fr; place-content: center;
         }
 
         .cell {
-            aspect-ratio: 1; 
-            background: #111; 
-            border: 2px solid #444; 
-            border-radius: 10%;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-weight: 900; 
-            /* Font size scales based on the smaller screen dimension */
-            font-size: 4vmin; 
-            cursor: pointer; 
-            color: var(--text);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            aspect-ratio: 1; background: #111; border: 3px solid #444; 
+            border-radius: 50%; /* Individual numbers are circles */
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 3.5vmin; cursor: pointer; color: var(--text);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5); margin: auto;
+            width: 100%; max-width: 12vmin;
         }
-        /* ---------------------------------------- */
 
         .cell.target { background: var(--accent) !important; color: #000 !important; border-color: #fff; }
-        .cell.correct { background: var(--success) !important; color: #000 !important; }
-        .cell.wrong { background: var(--fail) !important; }
+        .cell.correct { background: var(--success) !important; color: #000 !important; border-color: #fff; }
+        .cell.wrong { background: var(--fail) !important; border-color: #fff; }
 
+        /* --- MAIN PAGE STYLE --- */
         .glass-card {
             background: var(--glass); border: 3px solid var(--text);
             border-radius: 24px; padding: 20px; width: 95vw; max-width: 500px;
             box-shadow: 0 10px 40px rgba(0, 234, 255, 0.2); margin-top: 5px;
-        }
-
-        #elderly-hint-box {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--gold); color: #000; padding: 12px 20px;
-            border-radius: 50px; font-weight: 900; z-index: 500;
-            text-align: center; border: 4px solid #000; display: none; width: 80%;
         }
 
         .top-bar { width: 100%; display: flex; justify-content: space-between; padding: 10px 20px; background: #000; flex-shrink: 0; }
@@ -88,16 +66,22 @@
         #timer-bar { width: 100%; height: 10px; background: #333; margin-top: 8px; border-radius: 5px; overflow: hidden; }
         #timer-fill { width: 100%; height: 100%; background: var(--accent); }
 
-        .profile-item { background: #111; border: 2px solid var(--text); padding: 8px; margin-bottom: 5px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .profile-item { background: #111; border: 2px solid var(--text); padding: 10px; margin-bottom: 8px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
         .profile-info { flex-grow: 1; cursor: pointer; }
-        .profile-actions { display: flex; gap: 5px; }
-        .btn-sm { padding: 5px 10px; font-size: 0.8rem; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+        .profile-actions { display: flex; gap: 8px; }
+        .btn-sm { padding: 8px 12px; font-size: 1rem; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+
+        #elderly-hint-box {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--gold); color: #000; padding: 12px 20px;
+            border-radius: 50px; font-weight: 900; z-index: 500;
+            text-align: center; border: 4px solid #000; display: none; width: 80%;
+        }
 
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; background: var(--bg); padding: 20px; overflow-y: auto; }
         .hidden { display: none !important; }
-        
-        #msg { text-align: center; font-weight: 900; font-size: 1.8rem; color: var(--accent); height: 40px; margin-top: 5px; flex-shrink: 0; }
-        #rules-box { margin-top: 10px; font-size: 0.8rem; color: #ccc; border-top: 1px solid #444; padding-top: 8px; }
+        #msg { text-align: center; font-weight: 900; font-size: 1.8rem; color: var(--accent); height: 40px; margin-top: 10px; flex-shrink: 0; }
+        #rules-box { margin-top: 15px; font-size: 0.85rem; color: #ccc; border-top: 1px solid #444; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -105,26 +89,26 @@
     <div id="elderly-hint-box"></div>
 
     <div class="top-bar">
-        <span style="color: var(--accent); font-weight:900;">SNAPSHOT BLITZ</span>
+        <span style="color: var(--accent); font-weight: 900;">SNAPSHOT BLITZ</span>
         <button id="btn-logout" class="btn-hc hidden" onclick="location.reload()">👤 切換 / SWITCH</button>
     </div>
 
     <div id="game-header" class="hidden">
         <div style="text-align: center; margin-bottom: 5px;">
-            <button id="eld-toggle" class="btn-hc" style="background:var(--gold); padding: 5px 10px;" onclick="toggleElderly()">長者模式: 關</button>
+            <button id="eld-toggle" class="btn-hc" style="background:var(--gold);" onclick="toggleElderly()">長者模式: 關</button>
         </div>
         <div class="stats-grid">
-            <div><span id="txt-lvl">等級</span><br><span id="cur-lvl">1</span></div>
-            <div id="timer-ui"><span id="txt-time">時間</span><br><span id="cur-time">--</span>s</div>
-            <div><span id="txt-score">分數</span><br><span id="cur-score">0</span></div>
+            <div><span>等級</span><br><span id="cur-lvl">1</span></div>
+            <div><span>時間</span><br><span id="cur-time">--</span>s</div>
+            <div><span>分數</span><br><span id="cur-score">0</span></div>
         </div>
         <div id="timer-bar"><div id="timer-fill"></div></div>
     </div>
 
     <div id="start-screen" class="screen">
-        <h1 id="main-title" style="color: var(--accent); margin-bottom: 5px; font-size: 1.8rem;">快照閃電戰</h1>
+        <h1 style="color: var(--accent); margin-bottom: 5px;">快照閃電戰</h1>
         <div class="glass-card">
-            <button class="btn-hc" style="width:100%; margin-bottom:10px; background:var(--accent);" onclick="toggleLang()">🌐 切換語言 / Switch Language</button>
+            <button class="btn-hc" style="width:100%; margin-bottom:15px; background:var(--accent);" onclick="toggleLang()">🌐 切換語言 / Switch Language</button>
             
             <div id="profile-select-view">
                 <div id="profile-list"></div>
@@ -135,27 +119,26 @@
                 <h2 id="dash-name" style="color: var(--accent); margin:0;"></h2>
                 <button class="btn-primary" onclick="startAt(state.level)">繼續挑戰 / RESUME</button>
                 <button class="btn-primary" style="background: var(--accent);" onclick="startAt(1)">從頭開始 / START OVER</button>
-                <button class="btn-primary" style="background: var(--accent); color: #000;" onclick="shareGame()">🔗 分享遊戲 / SHARE</button>
                 <button class="btn-hc" style="width:100%; margin-top:10px;" onclick="location.reload()">返回 / BACK</button>
             </div>
 
             <div id="profile-create-view" class="hidden">
-                <input type="text" id="in-name" placeholder="NAME" style="width:100%; padding:15px; border-radius:10px; margin-bottom:10px; font-size:1.2rem; background:#222; color:#fff; border:1px solid var(--accent);">
+                <input type="text" id="in-name" placeholder="NAME" style="width:100%; padding:15px; border-radius:10px; margin-bottom:10px; background:#222; color:#fff; border:1px solid var(--accent);">
                 <button class="btn-primary" onclick="saveProfile()">儲存 / SAVE</button>
                 <button class="btn-hc" style="width:100%; margin-top:10px;" onclick="cancelCreate()">取消 / CANCEL</button>
             </div>
 
             <div id="rules-box">
-                <strong style="color: var(--gold);" id="txt-rule-head">遊戲規則 / RULES:</strong>
-                <ul id="rule-list" style="padding-left: 20px; margin-top: 5px; margin-bottom: 0;"></ul>
+                <strong style="color: var(--gold);">詳細規則 / DETAILED RULES:</strong>
+                <ul id="rule-list" style="padding-left: 20px; margin-top: 8px;"></ul>
             </div>
         </div>
     </div>
 
     <div id="tier-screen" class="screen hidden">
         <div class="glass-card" style="border-color: var(--gold); text-align:center;">
-            <h1 style="color: var(--gold); margin:0;">階段完成 TIER CLEAR!</h1>
-            <div id="tier-report" style="margin: 15px 0; font-size: 1.1rem; line-height: 1.4;"></div>
+            <h1>階段完成 TIER CLEAR!</h1>
+            <div id="tier-report" style="margin: 20px 0;"></div>
             <button class="btn-primary" onclick="closeTierGate()">進入下一階段 PROCEED</button>
         </div>
     </div>
@@ -174,20 +157,21 @@
     </div>
 
     <script>
+        // Use the SAME key to keep historical records across updates
+        const STORAGE_KEY = 'blitz_v_final';
+
         const i18n = {
             en: {
-                rules: ["Memory: Locations flash briefly.", "Play: Click the numbers you saw.", "Layout: Fits perfectly on one screen.", "Timer: 3s + 0.4s per target."],
+                rules: ["Memory: Locations flash briefly. Remember them!", "Play: Bubbles stay visible. Click only the targets.", "One-Screen: Layout auto-scales to fit one screen.", "Elderly Mode: No timer and provides hints.", "Record: Progress is saved locally in your browser."],
                 eldHint: (x, y) => `Found ${x}, ${y} left!`,
                 mem: (n) => `MEMORIZE... (${n}s)`,
-                tierMsg: (lvl, targets, grids) => `Prepare for Level ${lvl}!<br>Challenge: Find <b style="color:var(--accent)">${targets}</b> in <b style="color:var(--accent)">${grids}</b> grids.`,
-                shareMsg: (lvl) => `Level ${lvl} in Snapshot Blitz! `
+                tierMsg: (lvl, targets, grids) => `Level ${lvl} Incoming!<br>Find ${targets} targets in ${grids} bubbles.`
             },
             big5: {
-                rules: ["記憶：記住閃爍的號碼位置。", "點擊：號碼全程顯示，請選出剛才看到的號碼。", "規模：自動適應一屏顯示。", "時間：3秒基礎 + 每個目標0.4秒。"],
+                rules: ["記憶：目標號碼會短暫閃爍，請記住位置。", "點擊：號碼全程顯示，請選出剛才閃爍的目標。", "佈局：自動縮放，確保一屏顯示所有內容。", "長者模式：取消時間限制並提供即時提示。", "紀錄：您的挑戰進度會自動儲存在瀏覽器中。"],
                 eldHint: (x, y) => `已找到 ${x} 個，還剩 ${y} 個！`,
                 mem: (n) => `記憶中... (${n}秒)`,
-                tierMsg: (lvl, targets, grids) => `準備進入第 ${lvl} 關！<br>挑戰：在 <b style="color:var(--accent)">${grids}</b> 格中找出 <b style="color:var(--accent)">${targets}</b> 個。`,
-                shareMsg: (lvl) => `我在《快照閃電戰》達到了第 ${lvl} 關！`
+                tierMsg: (lvl, targets, grids) => `準備進入第 ${lvl} 關！<br>目標：在 ${grids} 個氣泡中找出 ${targets} 個。`
             }
         };
 
@@ -202,7 +186,8 @@
         function toggleLang() { lang = (lang === 'en') ? 'big5' : 'en'; loadProfiles(); }
 
         function loadProfiles() {
-            profiles = JSON.parse(localStorage.getItem('blitz_v_final') || '[]');
+            // Load from localStorage - this keeps historical data
+            profiles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             const list = document.getElementById('profile-list');
             list.innerHTML = '';
             profiles.forEach((p, i) => {
@@ -213,7 +198,7 @@
                         <strong>${p.name}</strong> <small>(LVL ${p.maxLvl})</small>
                     </div>
                     <div class="profile-actions">
-                        <button class="btn-sm" style="background:var(--accent);color:#000" onclick="editProfile(${i})">✎</button>
+                        <button class="btn-sm" style="background:var(--accent)" onclick="editProfile(${i})">✎</button>
                         <button class="btn-sm" style="background:var(--fail);color:#fff" onclick="deleteProfile(${i})">✕</button>
                     </div>`;
                 list.appendChild(item);
@@ -236,15 +221,22 @@
             document.getElementById('profile-create-view').classList.remove('hidden');
         }
 
-        function deleteProfile(i) { if(confirm("確定刪除?")) { profiles.splice(i,1); localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); loadProfiles(); } }
+        function deleteProfile(i) {
+            if(confirm(lang === 'en' ? "Delete profile?" : "確定刪除檔案？")) {
+                profiles.splice(i,1);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+                loadProfiles();
+            }
+        }
+
         function showCreateView() { editingIdx = -1; document.getElementById('in-name').value = ''; document.getElementById('profile-select-view').classList.add('hidden'); document.getElementById('profile-create-view').classList.remove('hidden'); }
         function cancelCreate() { document.getElementById('profile-create-view').classList.add('hidden'); document.getElementById('profile-select-view').classList.remove('hidden'); }
         
         function saveProfile() {
             const n = document.getElementById('in-name').value.trim(); if(!n) return;
-            if(editingIdx > -1) { profiles[editingIdx].name = n; }
-            else { profiles.push({name: n, maxLvl: 1}); }
-            localStorage.setItem('blitz_v_final', JSON.stringify(profiles));
+            if(editingIdx > -1) profiles[editingIdx].name = n;
+            else profiles.push({name: n, maxLvl: 1});
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
             location.reload();
         }
 
@@ -283,7 +275,9 @@
         function initGrid(count, tCount) {
             const g = document.getElementById('grid-container'); g.innerHTML = '';
             const cols = Math.ceil(Math.sqrt(count));
+            const rows = Math.ceil(count / cols);
             g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            g.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
             const p = Array.from({length: count}, (_, i) => i + 1).sort(() => 0.5 - Math.random());
             state.targets = p.slice(0, tCount);
             for(let i=1; i<=count; i++) {
@@ -320,8 +314,7 @@
             document.getElementById('msg').innerText = "CLEAR!";
             if(state.level % 10 === 0) {
                 const nextLvl = state.level + 1;
-                const nextTier = Math.floor((nextLvl - 1) / 10);
-                const nextGrids = Math.min(100, 25 + (nextTier * 15));
+                const nextGrids = Math.min(100, 25 + (Math.floor(nextLvl/10) * 15));
                 const nextTargets = Math.floor(nextGrids * 0.20);
                 document.getElementById('tier-report').innerHTML = i18n[lang].tierMsg(nextLvl, nextTargets, nextGrids);
                 document.getElementById('tier-screen').classList.remove('hidden');
@@ -330,27 +323,16 @@
 
         function closeTierGate() { state.level++; save(); document.getElementById('tier-screen').classList.add('hidden'); runRound(); }
         function fail() { clearInterval(gameTimer); state.status = 'idle'; updateHint(); document.getElementById('fail-screen').classList.remove('hidden'); }
-        function save() { if(curIdx > -1 && state.level > profiles[curIdx].maxLvl) { profiles[curIdx].maxLvl = state.level; localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); } }
-
-        function toggleElderly() {
-            isElderly = !isElderly; updateHint();
-            document.getElementById('timer-bar').style.visibility = isElderly ? 'hidden' : 'visible';
-            document.getElementById('eld-toggle').innerText = isElderly ? "長者模式: 開" : "長者模式: 關";
+        
+        function save() { 
+            if(curIdx > -1 && state.level > profiles[curIdx].maxLvl) { 
+                profiles[curIdx].maxLvl = state.level; 
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles)); 
+            } 
         }
 
-        function updateHint() {
-            const b = document.getElementById('elderly-hint-box');
-            if(isElderly && state.status === 'play') {
-                b.innerText = i18n[lang].eldHint(state.found, state.targets.length - state.found);
-                b.style.display = 'block';
-            } else b.style.display = 'none';
-        }
-
-        function shareGame() {
-            const url = window.location.href;
-            const text = i18n[lang].shareMsg(state.level) + url;
-            navigator.clipboard.writeText(text).then(() => alert("已複製連結！Copied link!"));
-        }
+        function toggleElderly() { isElderly = !isElderly; updateHint(); document.getElementById('timer-bar').style.visibility = isElderly ? 'hidden' : 'visible'; document.getElementById('eld-toggle').innerText = isElderly ? "長者模式: 開" : "長者模式: 關"; }
+        function updateHint() { const b = document.getElementById('elderly-hint-box'); if(isElderly && state.status === 'play') { b.innerText = i18n[lang].eldHint(state.found, state.targets.length - state.found); b.style.display = 'block'; } else b.style.display = 'none'; }
 
         loadProfiles();
     </script>
