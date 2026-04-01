@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snapshot Blitz | Memory Challenge</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --success: #4ade80;
+            --fail: #f87171;
+            --text: #f8fafc;
+            --secondary: #64748b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header Stats */
+        #game-header {
+            width: 100%;
+            padding: 10px;
+            background: var(--card);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 6px;
+            background: #334155;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        #timer-fill {
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.1s linear;
+        }
+
+        /* Grid Layouts */
+        #game-area {
+            width: 95%;
+            max-width: 500px;
+            padding: 20px 10px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .grid-5x5 { grid-template-columns: repeat(5, 1fr); }
+        .grid-8x5 { grid-template-columns: repeat(5, 1fr); } /* 40 cells */
+
+        .cell {
+            aspect-ratio: 1;
+            background: #334155;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            user-select: none;
+        }
+
+        .cell:active { transform: scale(0.9); }
+        .cell.target { background: var(--accent); color: var(--bg); }
+        .cell.hidden { color: transparent; }
+        .cell.correct { background: var(--success) !important; color: var(--bg) !important; }
+        .cell.wrong { background: var(--fail) !important; }
+
+        /* Overlay Screens */
+        .screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 200;
+            text-align: center;
+        }
+
+        .profile-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+        }
+
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent);
+            color: var(--bg);
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .btn-delete { background: none; color: var(--fail); width: auto; font-size: 1.5rem; }
+        .hidden { display: none !important; }
+
+        #msg { font-size: 1.5rem; font-weight: bold; color: var(--accent); margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div id="game-header" class="hidden">
+        <div class="header-content">
+            <h3 style="margin:0; letter-spacing: 2px;">SNAPSHOT BLITZ</h3>
+            <div class="stats-row">
+                <span>LVL: <span id="cur-lvl">1</span></span>
+                <span>TIME: <span id="cur-time">5.0</span>s</span>
+                <span>SCORE: <span id="cur-score">0</span></span>
+            </div>
+            <div id="timer-bar"><div id="timer-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="start-screen" class="screen">
+        <h1 style="color: var(--accent); margin-bottom: 5px;">SNAPSHOT BLITZ</h1>
+        <p style="color: var(--secondary); margin-bottom: 25px;">Memory Precision Challenge</p>
+
+        <div class="profile-card">
+            <div id="profile-setup">
+                <div style="font-size: 3rem; margin-bottom: 10px;">👤</div>
+                <input type="text" id="nick-input" placeholder="Nickname">
+                <input type="text" id="icon-input" placeholder="Your Icon (e.g. ⚡)">
+                <button onclick="saveProfile()">🚀 CREATE PROFILE</button>
+            </div>
+
+            <div id="profile-display" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div id="display-icon" style="font-size: 3.5rem;"></div>
+                    <button class="btn-delete" onclick="deleteProfile()" title="Delete Profile">🗑️</button>
+                </div>
+                <h2 id="display-name" style="margin: 10px 0; text-align: left;"></h2>
+                <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <small style="color: var(--secondary);">TOP SCORE</small>
+                    <div id="top-score" style="font-size: 1.4rem; color: var(--success); font-weight: bold;">0</div>
+                </div>
+                <button onclick="initGame()" style="background: var(--success); margin-top: 20px;">▶️ PLAY GAME</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; font-size: 0.85rem; color: var(--secondary); max-width: 300px;">
+            <strong>Rules:</strong> Memorize targets in 2s. <br>Find them all in 5s. Don't click wrong!
+        </div>
+    </div>
+
+    <div id="gate-screen" class="screen hidden">
+        <h1 id="gate-title">MILESTONE!</h1>
+        <p id="gate-desc"></p>
+        <button onclick="startNextRound(true)">ASCEND TO NEXT LEVEL</button>
+        <button style="background: var(--secondary);" onclick="location.reload()">QUIT TO MENU</button>
+    </div>
+
+    <div id="fail-screen" class="screen hidden">
+        <h1 id="fail-title" style="color: var(--fail);">CRASHED!</h1>
+        <p id="fail-stats"></p>
+        <button onclick="initGame()">RESTART (LVL 1)</button>
+        <button style="background: var(--secondary);" onclick="location.reload()">MAIN MENU</button>
+    </div>
+
+    <div id="game-area" class="hidden">
+        <div id="grid-container" class="grid grid-5x5"></div>
+        <div id="msg">READY?</div>
+    </div>
+
+    <script>
+        let user = { name: "Recruit", icon: "⭐", topScore: 0 };
+        let state = { score: 0, level: 1, targets: [], found: 0, totalCells: 25, targetCount: 5 };
+        let timerId;
+
+        // PROFILE MANAGEMENT
+        function loadProfile() {
+            const data = localStorage.getItem('blitz_pro');
+            if (data) {
+                user = JSON.parse(data);
+                document.getElementById('display-name').textContent = user.name;
+                document.getElementById('display-icon').textContent = user.icon;
+                document.getElementById('top-score').textContent = user.topScore.toLocaleString();
+                document.getElementById('profile-setup').classList.add('hidden');
+                document.getElementById('profile-display').classList.remove('hidden');
+            }
+        }
+
+        function saveProfile() {
+            const n = document.getElementById('nick-input').value.trim();
+            const i = document.getElementById('icon-input').value.trim();
+            if (!n) return alert("Enter a name!");
+            user = { name: n, icon: i || "👤", topScore: 0 };
+            localStorage.setItem('blitz_pro', JSON.stringify(user));
+            loadProfile();
+        }
+
+        function deleteProfile() {
+            if(confirm("Delete profile and high score?")) {
+                localStorage.removeItem('blitz_pro');
+                location.reload();
+            }
+        }
+
+        // GAME ENGINE
+        function initGame() {
+            state = { score: 0, level: 1, targets: [], found: 0, totalCells: 25, targetCount: 5 };
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById('game-header').classList.remove('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            startNextRound(true);
+        }
+
+        function startNextRound(proceed) {
+            if(!proceed) return;
+            document.getElementById('gate-screen').classList.add('hidden');
+            
+            // Scaling Logic
+            if (state.level >= 30) { state.targetCount = 15; state.totalCells = 40; }
+            else if (state.level >= 20) { state.targetCount = 12; state.totalCells = 25; }
+            else if (state.level >= 10) { state.targetCount = 8; state.totalCells = 25; }
+
+            renderGrid();
+            renderStats();
+            runMemoryPhase();
+        }
+
+        function renderGrid() {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = '';
+            container.className = state.totalCells === 40 ? 'grid grid-8x5' : 'grid grid-5x5';
+            
+            const pool = Array.from({length: state.totalCells}, (_, i) => i + 1);
+            state.targets = pool.sort(() => 0.5 - Math.random()).slice(0, state.targetCount);
+
+            for (let i = 1; i <= state.totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = i;
+                if (state.targets.includes(i)) cell.classList.add('target');
+                cell.onclick = () => handleInput(cell, i);
+                container.appendChild(cell);
+            }
+        }
+
+        function runMemoryPhase() {
+            document.getElementById('msg').textContent = "MEMORIZE...";
+            document.getElementById('timer-fill').style.width = "100%";
+            
+            setTimeout(() => {
+                document.querySelectorAll('.cell').forEach(c => {
+                    c.classList.remove('target');
+                    c.classList.add('hidden');
+                });
+                runActionPhase();
+            }, 2000);
+        }
+
+        function runActionPhase() {
+            document.getElementById('msg').textContent = "GO!";
+            let timeLeft = 5.0;
+            timerId = setInterval(() => {
+                timeLeft -= 0.1;
+                document.getElementById('cur-time').textContent = timeLeft.toFixed(1);
+                document.getElementById('timer-fill').style.width = (timeLeft/5 * 100) + "%";
+                if (timeLeft <= 0) endGame("OUT OF TIME");
+            }, 100);
+        }
+
+        function handleInput(el, val) {
+            if (document.getElementById('msg').textContent !== "GO!" || el.classList.contains('correct')) return;
+
+            el.classList.remove('hidden');
+            if (state.targets.includes(val)) {
+                el.classList.add('correct');
+                state.found++;
+                state.score += (10 * state.level);
+                renderStats();
+                if (state.found === state.targetCount) winRound();
+            } else {
+                el.classList.add('wrong');
+                endGame("WRONG CHOICE");
+            }
+        }
+
+        function winRound() {
+            clearInterval(timerId);
+            state.level++;
+            state.found = 0;
+            
+            // Milestone Checks
+            if (state.level === 10 || state.level === 20 || state.level === 30) {
+                showGate();
+            } else {
+                setTimeout(() => startNextRound(true), 600);
+            }
+        }
+
+        function showGate() {
+            const gate = document.getElementById('gate-screen');
+            const desc = state.level === 10 ? "Tired yet? Level 10+ jumps to 8 targets!" :
+                         state.level === 20 ? "Incredible! Level 20+ jumps to 12 targets!" :
+                         "Final Tier: Level 30+ uses 40 numbers and 15 targets!";
+            document.getElementById('gate-desc').textContent = desc;
+            gate.classList.remove('hidden');
+        }
+
+        function endGame(reason) {
+            clearInterval(timerId);
+            const screen = document.getElementById('fail-screen');
+            document.getElementById('fail-title').textContent = reason;
+            document.getElementById('fail-stats').textContent = `Score: ${state.score} | Level: ${state.level}`;
+            
+            if (state.score > user.topScore) {
+                user.topScore = state.score;
+                localStorage.setItem('blitz_pro', JSON.stringify(user));
+            }
+            screen.classList.remove('hidden');
+        }
+
+        function renderStats() {
+            document.getElementById('cur-lvl').textContent = state.level;
+            document.getElementById('cur-score').textContent = state.score;
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>
