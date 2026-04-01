@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snapshot Blitz | Multi-Profile</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
+            --success: #4ade80; --fail: #f87171; --text: #f8fafc; --secondary: #64748b;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+        /* Navigation & Lang */
+        .top-nav { width: 100%; display: flex; justify-content: flex-end; padding: 10px; gap: 10px; position: absolute; }
+        .btn-small { background: var(--secondary); color: white; border: none; padding: 5px 12px; cursor: pointer; border-radius: 5px; font-size: 0.8rem; }
+
+        /* Header UI */
+        #game-header { width: 100%; padding: 10px; background: var(--card); position: sticky; top: 0; z-index: 100; border-bottom: 2px solid var(--accent); }
+        .header-content { max-width: 600px; margin: 0 auto; text-align: center; }
+        .stats-row { display: flex; justify-content: space-around; margin-top: 8px; font-weight: bold; }
+        #timer-bar { width: 100%; height: 8px; background: #334155; border-radius: 10px; margin-top: 10px; overflow: hidden; }
+        #timer-fill { width: 100%; height: 100%; background: var(--accent); transition: width 0.1s linear; }
+
+        /* Grid */
+        #game-area { width: 95%; max-width: 500px; padding: 20px 10px; }
+        .grid { display: grid; gap: 8px; margin: 0 auto; }
+        .grid-5x5 { grid-template-columns: repeat(5, 1fr); }
+        .grid-8x5 { grid-template-columns: repeat(5, 1fr); }
+
+        .cell {
+            aspect-ratio: 1; background: #334155; border: 1px solid #475569; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+            font-size: 1.2rem; cursor: pointer; transition: 0.2s; color: var(--text); user-select: none;
+        }
+        .cell.target { background: var(--accent) !important; color: var(--bg) !important; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+        .cell.hide-text { color: transparent !important; }
+        .cell.correct { background: var(--success) !important; color: var(--bg) !important; }
+        .cell.wrong { background: var(--fail) !important; }
+        .cell.hint-flash { animation: hintPulse 0.5s 3; }
+        @keyframes hintPulse { 0%, 100% { background: #334155; } 50% { background: #fef08a; } }
+
+        /* Overlay & Buttons */
+        .screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 200; text-align: center; overflow-y: auto; }
+        .profile-card { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; text-align: center; }
+        
+        .btn-main { background: var(--accent); color: var(--bg); font-weight: bold; padding: 12px; border: none; border-radius: 8px; margin: 5px; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-main:hover { opacity: 0.8; }
+        .btn-elderly { background: #fef08a; color: #854d0e; font-weight: bold; padding: 8px 15px; border: none; border-radius: 20px; cursor: pointer; margin-top: 10px; display: flex; align-items: center; gap: 5px; }
+        .elderly-active { border: 2px solid #854d0e; box-shadow: 0 0 10px #fef08a; }
+
+        /* Multi-Profile List */
+        .profile-list { width: 100%; max-height: 200px; overflow-y: auto; margin: 15px 0; display: flex; flex-direction: column; gap: 10px; }
+        .profile-item { background: #334155; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+        .profile-item:hover { background: #475569; }
+        .profile-info { text-align: left; }
+
+        .rule-details { text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; font-size: 0.85rem; margin-top: 20px; line-height: 1.4; border-left: 4px solid var(--accent); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <button class="btn-small" onclick="toggleLang()">EN / 繁中</button>
+        <button id="btn-logout" class="btn-small hidden" onclick="location.reload()">👤 Switch User</button>
+    </div>
+
+    <div id="game-header" class="hidden">
+        <div class="header-content">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                <h3 id="txt-title" style="margin:0;">SNAPSHOT BLITZ</h3>
+                <button id="elderly-toggle" class="btn-elderly" onclick="toggleElderly()">👴 <span id="txt-elderly-btn">Elderly Mode</span></button>
+            </div>
+            <div class="stats-row">
+                <span><span id="txt-lvl">LVL</span>: <span id="cur-lvl">1</span></span>
+                <span id="timer-text-container"><span id="txt-time">TIME</span>: <span id="cur-time">5.0</span>s</span>
+                <span><span id="txt-score">SCORE</span>: <span id="cur-score">0</span></span>
+            </div>
+            <div id="timer-bar"><div id="timer-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="start-screen" class="screen">
+        <h1 style="color: var(--accent); margin-bottom: 10px;">SNAPSHOT BLITZ</h1>
+        
+        <div class="profile-card">
+            <div id="profile-selector">
+                <h3 id="txt-select-user">Select Profile</h3>
+                <div id="list-container" class="profile-list"></div>
+                <button class="btn-main" onclick="showCreate()"><span id="txt-new-user">+ New Profile</span></button>
+            </div>
+
+            <div id="profile-setup" class="hidden">
+                <input type="text" id="nick-input" placeholder="Nickname">
+                <input type="text" id="icon-input" placeholder="Icon (⚡, 🤖, 🔥)">
+                <button class="btn-main" onclick="createProfile()" id="txt-create">CREATE</button>
+                <button class="btn-small" onclick="showSelector()" style="margin-top:10px;">Back</button>
+            </div>
+
+            <div id="profile-display" class="hidden">
+                <h2 id="display-name"></h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-main" onclick="initGame(state.level)" id="txt-play">RESUME</button>
+                    <button class="btn-main" style="background:var(--success)" onclick="initGame(1)" id="txt-restart">START LVL 1</button>
+                </div>
+                <button class="btn-small" style="color:var(--fail); margin-top:10px;" onclick="deleteCurrentProfile()" id="txt-delete">Delete This Profile</button>
+            </div>
+
+            <div class="rule-details">
+                <strong id="txt-rule-head">How to Play:</strong>
+                <ul id="rule-list" style="padding-left: 20px; margin: 10px 0;">
+                    </ul>
+                <div style="color: #fef08a; font-size: 0.75rem;">
+                    💡 <span id="txt-elderly-rule">Elderly Mode: No time limit + Hints after 30s.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="fail-screen" class="screen hidden">
+        <h1 id="txt-fail" style="color: var(--fail);">FAILED</h1>
+        <p id="fail-stats"></p>
+        <button class="btn-main" onclick="startNextRound()" id="txt-retry">RETRY</button>
+        <button class="btn-main" style="background: var(--secondary);" onclick="location.reload()" id="txt-quit">QUIT</button>
+    </div>
+
+    <div id="game-area" class="hidden">
+        <div id="grid-container" class="grid grid-5x5"></div>
+        <div id="msg" style="margin-top: 20px; font-weight: bold; color: var(--accent);">READY?</div>
+    </div>
+
+    <script>
+        const i18n = {
+            en: {
+                title: "SNAPSHOT BLITZ", create: "CREATE PROFILE", play: "RESUME", restart: "START LVL 1", delete: "DELETE PROFILE",
+                lvl: "LVL", time: "TIME", score: "SCORE", elderlyBtn: "Elderly Mode",
+                ready: "READY?", memorize: "MEMORIZE...", go: "GO!", win: "LEVEL CLEAR!",
+                fail: "MISSION FAILED", retry: "RETRY LEVEL", quit: "MAIN MENU",
+                newUser: "+ New Profile", selectUser: "Select Profile",
+                ruleHead: "Game Tiers:",
+                rule1: "Tier 1 (Lvl 1-10): 5 Targets | 5x5 Grid",
+                rule2: "Tier 2 (Lvl 11-20): 8 Targets | 5x5 Grid",
+                rule3: "Tier 3 (Lvl 21-30): 12 Targets | 5x5 Grid",
+                rule4: "Tier 4 (Lvl 31+): 15 Targets | 5x8 Grid",
+                elderlyRule: "Elderly Mode: No time limit. Flashing hint appears after 30s of inactivity."
+            },
+            big5: {
+                title: "閃速記憶", create: "建立個人檔案", play: "繼續挑戰", restart: "從第一關開始", delete: "刪除此檔案",
+                lvl: "等級", time: "時間", score: "分數", elderlyBtn: "長者模式",
+                ready: "準備？", memorize: "記憶中...", go: "開始！", win: "過關！",
+                fail: "挑戰失敗", retry: "重試該關", quit: "返回主頁",
+                newUser: "+ 新建個人檔案", selectUser: "選擇使用者",
+                ruleHead: "等級難度：",
+                rule1: "第一階段 (1-10級): 5個目標 | 5x5 網格",
+                rule2: "第二階段 (11-20級): 8個目標 | 5x5 網格",
+                rule3: "第三階段 (21-30級): 12個目標 | 5x5 網格",
+                rule4: "第四階段 (31級以上): 15個目標 | 5x8 網格",
+                elderlyRule: "長者模式：無時間限制。若30秒無動作，正確方格會閃爍提示。"
+            }
+        };
+
+        let lang = 'en';
+        let profiles = [];
+        let activeIndex = -1;
+        let state = { level: 1, score: 0, found: 0, targets: [], status: 'idle', idleSeconds: 0 };
+        let gameTimer, hintTimer;
+
+        // --- PROFILE LOGIC ---
+        function loadProfiles() {
+            const data = localStorage.getItem('blitz_multi_v1');
+            profiles = data ? JSON.parse(data) : [];
+            renderProfileList();
+            updateUI();
+        }
+
+        function renderProfileList() {
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            profiles.forEach((p, index) => {
+                const div = document.createElement('div');
+                div.className = 'profile-item';
+                div.innerHTML = `
+                    <div class="profile-info">
+                        <strong>${p.icon} ${p.name}</strong><br>
+                        <small>Max Lvl: ${p.maxLvl} | Score: ${p.topScore}</small>
+                    </div>
+                    <span>▶</span>
+                `;
+                div.onclick = () => selectProfile(index);
+                container.appendChild(div);
+            });
+        }
+
+        function selectProfile(index) {
+            activeIndex = index;
+            const p = profiles[index];
+            state.level = p.maxLvl;
+            document.getElementById('display-name').textContent = `${p.icon} ${p.name}`;
+            document.getElementById('profile-selector').classList.add('hidden');
+            document.getElementById('profile-display').classList.remove('hidden');
+            document.getElementById('btn-logout').classList.remove('hidden');
+            if (p.elderly) {
+                document.getElementById('elderly-toggle').classList.add('elderly-active');
+            }
+        }
+
+        function showCreate() {
+            document.getElementById('profile-selector').classList.add('hidden');
+            document.getElementById('profile-setup').classList.remove('hidden');
+        }
+
+        function showSelector() {
+            document.getElementById('profile-setup').classList.add('hidden');
+            document.getElementById('profile-selector').classList.remove('hidden');
+        }
+
+        function createProfile() {
+            const name = document.getElementById('nick-input').value.trim();
+            const icon = document.getElementById('icon-input').value.trim() || "👤";
+            if (!name) return alert("Enter name!");
+            
+            profiles.push({ name, icon, topScore: 0, maxLvl: 1, elderly: false });
+            localStorage.setItem('blitz_multi_v1', JSON.stringify(profiles));
+            location.reload();
+        }
+
+        function deleteCurrentProfile() {
+            if (confirm("Delete this profile forever?")) {
+                profiles.splice(activeIndex, 1);
+                localStorage.setItem('blitz_multi_v1', JSON.stringify(profiles));
+                location.reload();
+            }
+        }
+
+        // --- GAME LOGIC ---
+        function toggleLang() {
+            lang = lang === 'en' ? 'big5' : 'en';
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = i18n[lang];
+            document.getElementById('txt-title').textContent = t.title;
+            document.getElementById('txt-create').textContent = t.create;
+            document.getElementById('txt-play').textContent = t.play;
+            document.getElementById('txt-restart').textContent = t.restart;
+            document.getElementById('txt-delete').textContent = t.delete;
+            document.getElementById('txt-lvl').textContent = t.lvl;
+            document.getElementById('txt-time').textContent = t.time;
+            document.getElementById('txt-score').textContent = t.score;
+            document.getElementById('txt-elderly-btn').textContent = t.elderlyBtn;
+            document.getElementById('txt-fail').textContent = t.fail;
+            document.getElementById('txt-retry').textContent = t.retry;
+            document.getElementById('txt-quit').textContent = t.quit;
+            document.getElementById('txt-new-user').textContent = t.newUser;
+            document.getElementById('txt-select-user').textContent = t.selectUser;
+            
+            // Rules
+            document.getElementById('txt-rule-head').textContent = t.ruleHead;
+            document.getElementById('txt-elderly-rule').textContent = t.elderlyRule;
+            document.getElementById('rule-list').innerHTML = `
+                <li>${t.rule1}</li><li>${t.rule2}</li><li>${t.rule3}</li><li>${t.rule4}</li>
+            `;
+        }
+
+        function toggleElderly() {
+            profiles[activeIndex].elderly = !profiles[activeIndex].elderly;
+            localStorage.setItem('blitz_multi_v1', JSON.stringify(profiles));
+            
+            const isElderly = profiles[activeIndex].elderly;
+            document.getElementById('elderly-toggle').classList.toggle('elderly-active', isElderly);
+            document.getElementById('timer-bar').classList.toggle('hidden', isElderly);
+            document.getElementById('timer-text-container').classList.toggle('hidden', isElderly);
+            if (isElderly) clearInterval(gameTimer);
+        }
+
+        function initGame(lvl) {
+            state.level = lvl; state.score = 0;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-header').classList.remove('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            startNextRound();
+        }
+
+        function startNextRound() {
+            clearInterval(gameTimer); clearInterval(hintTimer);
+            state.found = 0; state.status = 'memorize'; state.idleSeconds = 0;
+            document.getElementById('fail-screen').classList.add('hidden');
+            
+            let tCount = state.level >= 31 ? 15 : state.level >= 21 ? 12 : state.level >= 11 ? 8 : 5;
+            let cells = state.level >= 31 ? 40 : 25;
+
+            renderGrid(cells, tCount);
+            document.getElementById('msg').textContent = i18n[lang].memorize;
+            document.getElementById('cur-lvl').textContent = state.level;
+
+            setTimeout(() => {
+                state.status = 'play';
+                document.querySelectorAll('.cell').forEach(c => {
+                    c.classList.add('hide-text');
+                    c.classList.remove('target');
+                });
+                if (!profiles[activeIndex].elderly) startStandardTimer();
+                startHintTimer();
+            }, 2000);
+        }
+
+        function renderGrid(count, tCount) {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = '';
+            container.className = count === 40 ? 'grid grid-8x5' : 'grid grid-5x5';
+            const pool = Array.from({length: count}, (_, i) => i + 1).sort(() => 0.5 - Math.random());
+            state.targets = pool.slice(0, tCount);
+
+            for (let i = 1; i <= count; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell'; cell.textContent = i;
+                if (state.targets.includes(i)) cell.classList.add('target');
+                cell.onclick = () => handleTap(cell, i);
+                container.appendChild(cell);
+            }
+        }
+
+        function startStandardTimer() {
+            let timeLeft = 5.0;
+            gameTimer = setInterval(() => {
+                timeLeft -= 0.1;
+                document.getElementById('cur-time').textContent = Math.max(0, timeLeft).toFixed(1);
+                document.getElementById('timer-fill').style.width = (timeLeft/5 * 100) + "%";
+                if (timeLeft <= 0) endGame("TIMEOUT");
+            }, 100);
+        }
+
+        function startHintTimer() {
+            hintTimer = setInterval(() => {
+                state.idleSeconds++;
+                if (state.idleSeconds >= 30) {
+                    provideHint();
+                    state.idleSeconds = 0;
+                }
+            }, 1000);
+        }
+
+        function provideHint() {
+            const hiddenTargets = Array.from(document.querySelectorAll('.cell'))
+                .filter(c => state.targets.includes(parseInt(c.textContent)) && !c.classList.contains('correct'));
+            if (hiddenTargets.length > 0) {
+                const hint = hiddenTargets[Math.floor(Math.random() * hiddenTargets.length)];
+                hint.classList.add('hint-flash');
+                setTimeout(() => hint.classList.remove('hint-flash'), 1500);
+            }
+        }
+
+        function handleTap(el, val) {
+            if (state.status !== 'play' || el.classList.contains('correct')) return;
+            state.idleSeconds = 0;
+
+            if (state.targets.includes(val)) {
+                el.classList.remove('hide-text', 'hint-flash');
+                el.classList.add('correct');
+                state.found++;
+                state.score += 10;
+                document.getElementById('cur-score').textContent = state.score;
+                if (state.found === state.targets.length) winRound();
+            } else {
+                el.classList.add('wrong');
+                endGame("WRONG");
+            }
+        }
+
+        function winRound() {
+            clearInterval(gameTimer); clearInterval(hintTimer);
+            state.status = 'idle';
+            state.level++;
+            
+            // Save Progress
+            if (state.level > profiles[activeIndex].maxLvl) profiles[activeIndex].maxLvl = state.level;
+            if (state.score > profiles[activeIndex].topScore) profiles[activeIndex].topScore = state.score;
+            localStorage.setItem('blitz_multi_v1', JSON.stringify(profiles));
+
+            document.getElementById('msg').textContent = i18n[lang].win;
+            setTimeout(startNextRound, 800);
+        }
+
+        function endGame(reason) {
+            clearInterval(gameTimer); clearInterval(hintTimer);
+            state.status = 'idle';
+            if (!profiles[activeIndex].elderly && state.level > 1) state.level--; 
+            document.getElementById('fail-screen').classList.remove('hidden');
+        }
+
+        loadProfiles();
+    </script>
+</body>
+</html>
