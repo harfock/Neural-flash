@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snapshot Blitz | Professional Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Snapshot Blitz | Ultimate Edition</title>
     <style>
         :root {
             --bg: #000000;
@@ -13,10 +13,10 @@
             --fail: #ff003c;
             --text: #ffffff;
             --gold: #ffff00;
-            --base-font: 1.25rem; /* 字體放大 25% */
+            --base-font: 1.2rem;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; transition: 0.2s; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; touch-action: manipulation; }
         body {
             background: radial-gradient(circle at top, #1a1a1a, #000000);
             color: var(--text); margin: 0; font-size: var(--base-font);
@@ -24,57 +24,25 @@
             overflow-x: hidden;
         }
 
-        /* 長者模式浮動提示框 */
-        #elderly-hint-box {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--gold); color: #000; padding: 18px 25px;
-            border-radius: 50px; font-weight: 900; font-size: 1.3rem;
-            box-shadow: 0 0 30px rgba(255, 255, 0, 0.5); z-index: 500;
-            text-align: center; border: 4px solid #000; display: none;
-            animation: float 2.5s infinite ease-in-out; width: 90%; max-width: 450px;
-        }
-        @keyframes float { 0%, 100% { bottom: 30px; } 50% { bottom: 45px; } }
-
-        /* 主介面玻璃卡片 */
-        .glass-card {
-            background: var(--glass); border: 3px solid var(--text);
-            border-radius: 24px; padding: 30px; width: 95%; max-width: 500px;
-            box-shadow: 0 10px 40px rgba(0, 234, 255, 0.1); margin-top: 20px;
+        /* 80% Screen Grid Area */
+        #game-area { 
+            width: 85vw; 
+            height: 65vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
+            margin-top: 20px;
         }
 
-        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px; }
-        .btn-hc {
-            background: var(--text); color: var(--bg); border: none;
-            padding: 10px 18px; font-weight: 900; cursor: pointer; border-radius: 8px; font-size: 1rem;
+        .grid { 
+            display: grid; 
+            gap: 15px; /* Large gap for easier touch */
+            margin: 0 auto; 
+            width: 100%;
         }
 
-        .btn-primary {
-            width: 100%; padding: 20px; background: var(--success); color: #000;
-            font-weight: 900; font-size: 1.5rem; border: none; border-radius: 15px;
-            cursor: pointer; margin-top: 15px; text-transform: uppercase;
-        }
-
-        /* 使用者管理清單 */
-        .profile-item {
-            background: #111; border: 2px solid var(--text); padding: 12px;
-            margin-bottom: 10px; border-radius: 12px; display: flex;
-            justify-content: space-between; align-items: center;
-        }
-        .profile-info { flex-grow: 1; cursor: pointer; padding: 5px; }
-        .profile-actions { display: flex; gap: 8px; }
-        .btn-sm { padding: 8px 12px; font-size: 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-edit { background: var(--accent); color: #000; }
-        .btn-del { background: var(--fail); color: #fff; }
-
-        /* 遊戲區域 */
-        #game-header { width: 100%; padding: 15px; background: #000; border-bottom: 5px solid var(--accent); position: sticky; top: 0; z-index: 100; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; font-weight: 900; }
-        #timer-bar { width: 100%; height: 14px; background: #333; margin-top: 15px; border: 2px solid var(--text); border-radius: 10px; overflow: hidden; }
-        #timer-fill { width: 100%; height: 100%; background: var(--accent); width: 100%; }
-        
-        .grid { display: grid; gap: 10px; margin: 0 auto; width: 100%; }
         .cell {
-            aspect-ratio: 1; background: #111; border: 3px solid #444; border-radius: 10px;
+            aspect-ratio: 1; background: #111; border: 3px solid #444; border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
             font-weight: 900; font-size: 1.8rem; cursor: pointer; color: var(--text);
         }
@@ -82,8 +50,41 @@
         .cell.correct { background: var(--success) !important; color: #000 !important; }
         .cell.wrong { background: var(--fail) !important; }
 
+        .glass-card {
+            background: var(--glass); border: 3px solid var(--text);
+            border-radius: 24px; padding: 25px; width: 95vw; max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 234, 255, 0.2); margin-top: 10px;
+        }
+
+        #elderly-hint-box {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--gold); color: #000; padding: 15px 25px;
+            border-radius: 50px; font-weight: 900; z-index: 500;
+            text-align: center; border: 4px solid #000; display: none; width: 85%;
+        }
+
+        .top-bar { width: 100%; display: flex; justify-content: space-between; padding: 10px 20px; background: #000; }
+        .btn-hc { background: var(--text); color: var(--bg); border: none; padding: 10px 15px; font-weight: 900; border-radius: 8px; cursor: pointer; }
+        .btn-primary { width: 100%; padding: 18px; background: var(--success); color: #000; font-weight: 900; font-size: 1.4rem; border: none; border-radius: 15px; margin-top: 10px; cursor: pointer; }
+        .btn-share { background: var(--accent); color: #000; }
+
+        #game-header { width: 100%; padding: 10px; border-bottom: 4px solid var(--accent); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; font-weight: 900; }
+        #timer-bar { width: 100%; height: 12px; background: #333; margin-top: 10px; border-radius: 10px; overflow: hidden; }
+        #timer-fill { width: 100%; height: 100%; background: var(--accent); }
+
+        /* Profile List Styles */
+        .profile-item { background: #111; border: 2px solid var(--text); padding: 10px; margin-bottom: 8px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .profile-info { flex-grow: 1; cursor: pointer; }
+        .profile-actions { display: flex; gap: 5px; }
+        .btn-sm { padding: 8px 12px; font-size: 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; background: var(--bg); padding: 20px; }
         .hidden { display: none !important; }
+        
+        #msg { text-align: center; font-weight: 900; font-size: 2rem; color: var(--accent); margin-top: 10px; min-height: 3rem; }
+        
+        #rules-box { margin-top: 15px; font-size: 0.85rem; color: #ccc; border-top: 1px solid #444; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -91,12 +92,12 @@
     <div id="elderly-hint-box"></div>
 
     <div class="top-bar">
-        <span style="color: var(--accent); font-weight:900; letter-spacing:2px; font-size:1rem;">SNAPSHOT BLITZ</span>
-        <button id="btn-logout" class="btn-hc hidden" onclick="location.reload()">👤 SWITCH USER</button>
+        <span style="color: var(--accent); font-weight:900;">SNAPSHOT BLITZ</span>
+        <button id="btn-logout" class="btn-hc hidden" onclick="location.reload()">👤 切換 / SWITCH</button>
     </div>
 
     <div id="game-header" class="hidden">
-        <div style="text-align: center; margin-bottom: 10px;">
+        <div style="text-align: center; margin-bottom: 8px;">
             <button id="eld-toggle" class="btn-hc" style="background:var(--gold);" onclick="toggleElderly()">長者模式: 關</button>
         </div>
         <div class="stats-grid">
@@ -108,73 +109,73 @@
     </div>
 
     <div id="start-screen" class="screen">
-        <h1 id="main-title" style="color: var(--accent); letter-spacing: 4px;">快照閃電戰</h1>
+        <h1 id="main-title" style="color: var(--accent); margin-bottom: 5px;">快照閃電戰</h1>
         <div class="glass-card">
-            <button id="start-lang-btn" class="btn-hc" style="width:100%; margin-bottom:15px; background:var(--accent); color:#000;" onclick="toggleLang()">🌐 切換語言 / Switch Language</button>
-
+            <button class="btn-hc" style="width:100%; margin-bottom:10px; background:var(--accent);" onclick="toggleLang()">🌐 切換語言 / Switch Language</button>
+            
             <div id="profile-select-view">
-                <h3 id="txt-select-head" style="margin-top:0;">選擇使用者</h3>
                 <div id="profile-list"></div>
-                <button class="btn-primary" onclick="showCreateView()" id="txt-new-btn">+ 新建檔案</button>
+                <button class="btn-primary" onclick="showCreateView()">+ 新建檔案 / NEW PROFILE</button>
             </div>
 
             <div id="profile-dash-view" class="hidden">
-                <h2 id="dash-name" style="margin-top:0; color: var(--accent);"></h2>
-                <button class="btn-primary" onclick="startAt(state.level)" id="txt-resume-btn">繼續挑戰</button>
-                <button class="btn-primary" style="background: var(--accent);" onclick="startAt(1)" id="txt-start-btn">第一關開始</button>
+                <h2 id="dash-name" style="color: var(--accent); margin:0;"></h2>
+                <button class="btn-primary" onclick="startAt(state.level)">繼續挑戰 / RESUME</button>
+                <button class="btn-primary" style="background: var(--accent);" onclick="startAt(1)">從頭開始 / START OVER</button>
+                <button class="btn-primary btn-share" onclick="shareGame()">🔗 分享遊戲 / SHARE</button>
+                <button class="btn-hc" style="width:100%; margin-top:10px;" onclick="location.reload()">返回 / BACK</button>
             </div>
 
             <div id="profile-create-view" class="hidden">
-                <input type="text" id="in-name" placeholder="輸入名稱" style="width:100%; padding:15px; border-radius:10px; border:3px solid var(--text); background:#000; color:#fff; font-size:1.4rem; margin-bottom:15px;">
-                <button class="btn-primary" onclick="saveProfile()" id="txt-save-btn">儲存 / SAVE</button>
+                <input type="text" id="in-name" placeholder="NAME" style="width:100%; padding:15px; border-radius:10px; margin-bottom:10px; font-size:1.2rem; background:#222; color:#fff; border:1px solid var(--accent);">
+                <button class="btn-primary" onclick="saveProfile()">儲存 / SAVE</button>
                 <button class="btn-hc" style="width:100%; margin-top:10px;" onclick="cancelCreate()">取消 / CANCEL</button>
             </div>
 
-            <div id="rules-box" style="margin-top: 20px; font-size: 0.9rem; color: #ccc; border-top: 2px solid #444; padding-top: 15px;">
-                <strong style="color: var(--gold);" id="txt-rule-head">遊戲詳細規則：</strong>
-                <ul id="rule-list" style="padding-left: 20px; margin-top: 10px;"></ul>
+            <div id="rules-box">
+                <strong style="color: var(--gold);" id="txt-rule-head">遊戲規則 / RULES:</strong>
+                <ul id="rule-list" style="padding-left: 20px; margin-top: 5px;"></ul>
             </div>
         </div>
     </div>
 
     <div id="tier-screen" class="screen hidden">
         <div class="glass-card" style="border-color: var(--gold); text-align:center;">
-            <h1 id="tier-title" style="color: var(--gold);">階段完成！</h1>
-            <p id="tier-report" style="line-height:1.6;"></p>
-            <button class="btn-primary" onclick="closeTierGate()" id="txt-proceed-btn">進入下一階段</button>
+            <h1 style="color: var(--gold); margin:0;">階段完成 TIER CLEAR!</h1>
+            <div id="tier-report" style="margin: 20px 0; font-size: 1.2rem; line-height: 1.5;"></div>
+            <button class="btn-primary" onclick="closeTierGate()">進入下一階段 PROCEED</button>
+            <button class="btn-primary btn-share" onclick="shareGame()">🔗 分享戰績 / SHARE</button>
         </div>
     </div>
 
     <div id="fail-screen" class="screen hidden">
         <div class="glass-card" style="border-color: var(--fail); text-align:center;">
-            <h1 id="fail-title" style="color: var(--fail);">失敗</h1>
-            <button class="btn-primary" onclick="runRound()" id="txt-retry-btn">重試</button>
-            <button class="btn-hc" style="width:100%; margin-top:20px;" onclick="location.reload()" id="txt-quit-btn">離開</button>
+            <h1 style="color: var(--fail);">失敗 FAILED</h1>
+            <button class="btn-primary" onclick="runRound()">重試 RETRY</button>
+            <button class="btn-hc" style="width:100%; margin-top:15px;" onclick="location.reload()">退出 QUIT</button>
         </div>
     </div>
 
     <div id="game-area" class="hidden">
         <div id="grid-container" class="grid"></div>
-        <div id="msg" style="text-align: center; margin-top: 25px; font-weight: 900; font-size: 2.2rem; color: var(--accent);"></div>
+        <div id="msg"></div>
     </div>
 
     <script>
         const i18n = {
             en: {
-                mainTitle: "SNAPSHOT BLITZ", select: "SELECT PROFILE", new: "+ NEW PROFILE", resume: "RESUME MISSION", start: "START LVL 1", lvl: "LVL", time: "TIME", score: "SCORE",
-                ruleHead: "GAME MECHANICS:", rules: ["Memory: Locations flash briefly. Remember them!", "Blitz: Click targets within dynamic time (0.4s/target).", "Progression: Grid grows every 10 levels.", "Visible: Numbers stay visible to help you."],
-                eldOn: "Elderly Mode: ON", eldOff: "Elderly Mode: OFF", eldHint: (x, y) => `Good! Found ${x}, need ${y} more!`,
-                mem: (n) => `MEMORIZE... (${n}s)`, go: "GO!", clear: "CLEAR!", switchUser: "👤 SWITCH USER",
-                delConfirm: "Delete this profile?", editPrompt: "Enter name:", tierTitle: "TIER CLEARED!", proceed: "NEXT TIER", failTitle: "FAILED", retry: "RETRY", quit: "QUIT",
-                tierMsg: (lvl, grid) => `Moving to Level ${lvl}. Grid expands to ${grid} cells.`
+                rules: ["Memory: Watch the highlighted numbers.", "Play: Numbers stay visible. Click the ones you saw.", "Scaling: Grid grows every 10 levels (80% screen max).", "Timer: Dynamic (3s + 0.4s per target)."],
+                eldHint: (x, y) => `Found ${x}, ${y} left!`,
+                mem: (n) => `MEMORIZE... (${n}s)`,
+                tierMsg: (lvl, targets, grids) => `Prepare for Level ${lvl}!<br>Next challenge: Find <b style="color:var(--accent)">${targets}</b> numbers in a <b style="color:var(--accent)">${grids}</b> grid.`,
+                shareMsg: (lvl) => `I reached Level ${lvl} in Snapshot Blitz! Can you beat me? `
             },
             big5: {
-                mainTitle: "快照閃電戰", select: "選擇使用者", new: "+ 新建檔案", resume: "繼續挑戰", start: "第一關開始", lvl: "等級", time: "時間", score: "分數",
-                ruleHead: "遊戲詳細規則：", rules: ["記憶：目標方格會閃爍，請記住位置。", "點擊：動態計時 (基礎3秒 + 每個目標0.4秒)。", "進度：每過10關，網格會擴大。", "提示：數字全程顯示，方便辨識。"],
-                eldOn: "長者模式: 開", eldOff: "長者模式: 關", eldHint: (x, y) => `很棒！已選中 ${x} 個，還剩 ${y} 個！`,
-                mem: (n) => `記憶中... (${n}秒)`, go: "開始！", clear: "過關！", switchUser: "👤 切換使用者",
-                delConfirm: "確定要刪除嗎？", editPrompt: "輸入名稱：", tierTitle: "階段完成！", proceed: "下一階段", failTitle: "失敗", retry: "重試", quit: "離開",
-                tierMsg: (lvl, grid) => `即將進入第 ${lvl} 關。網格擴張至 ${grid} 格。`
+                rules: ["記憶：記住閃爍的目標號碼位置。", "點擊：號碼全程顯示，請選出剛才看到的號碼。", "規模：每10關擴大網格 (保持螢幕 80% 大小)。", "時間：動態計算 (3秒基礎 + 每個目標0.4秒)。"],
+                eldHint: (x, y) => `已找到 ${x} 個，還剩 ${y} 個！`,
+                mem: (n) => `記憶中... (${n}秒)`,
+                tierMsg: (lvl, targets, grids) => `準備進入第 ${lvl} 關！<br>下個挑戰：在 <b style="color:var(--accent)">${grids}</b> 格中找出 <b style="color:var(--accent)">${targets}</b> 個目標。`,
+                shareMsg: (lvl) => `我在《快照閃電戰》達到了第 ${lvl} 關！快來挑戰我的記憶力！`
             }
         };
 
@@ -183,35 +184,13 @@
         let curIdx = -1;
         let editingIdx = -1;
         let isElderly = false;
-        let state = { level: 1, score: 0, targets: [], found: 0, status: 'idle' };
+        let state = { level: 1, targets: [], found: 0, status: 'idle' };
         let gameTimer;
 
-        function toggleLang() { lang = (lang === 'en') ? 'big5' : 'en'; renderUI(); loadProfiles(); }
-
-        function renderUI() {
-            const t = i18n[lang];
-            document.getElementById('main-title').innerText = t.mainTitle;
-            document.getElementById('txt-select-head').innerText = t.select;
-            document.getElementById('txt-new-btn').innerText = t.new;
-            document.getElementById('txt-resume-btn').innerText = t.resume;
-            document.getElementById('txt-start-btn').innerText = t.start;
-            document.getElementById('txt-lvl').innerText = t.lvl;
-            document.getElementById('txt-time').innerText = t.time;
-            document.getElementById('txt-score').innerText = t.score;
-            document.getElementById('txt-rule-head').innerText = t.ruleHead;
-            document.getElementById('rule-list').innerHTML = t.rules.map(r => `<li>${r}</li>`).join('');
-            document.getElementById('btn-logout').innerText = t.switchUser;
-            document.getElementById('eld-toggle').innerText = isElderly ? t.eldOn : t.eldOff;
-            document.getElementById('tier-title').innerText = t.tierTitle;
-            document.getElementById('txt-proceed-btn').innerText = t.proceed;
-            document.getElementById('fail-title').innerText = t.failTitle;
-            document.getElementById('txt-retry-btn').innerText = t.retry;
-            document.getElementById('txt-quit-btn').innerText = t.quit;
-        }
+        function toggleLang() { lang = (lang === 'en') ? 'big5' : 'en'; loadProfiles(); }
 
         function loadProfiles() {
-            const saved = localStorage.getItem('blitz_v_final');
-            profiles = saved ? JSON.parse(saved) : [];
+            profiles = JSON.parse(localStorage.getItem('blitz_v_final') || '[]');
             const list = document.getElementById('profile-list');
             list.innerHTML = '';
             profiles.forEach((p, i) => {
@@ -222,13 +201,20 @@
                         <strong>${p.name}</strong> <small>(LVL ${p.maxLvl})</small>
                     </div>
                     <div class="profile-actions">
-                        <button class="btn-sm btn-edit" onclick="editProfile(${i})">✎</button>
-                        <button class="btn-sm btn-del" onclick="deleteProfile(${i})">✕</button>
-                    </div>
-                `;
+                        <button class="btn-sm" style="background:var(--accent);color:#000" onclick="editProfile(${i})">✎</button>
+                        <button class="btn-sm" style="background:var(--fail);color:#fff" onclick="deleteProfile(${i})">✕</button>
+                    </div>`;
                 list.appendChild(item);
             });
-            renderUI();
+            document.getElementById('rule-list').innerHTML = i18n[lang].rules.map(r => `<li>${r}</li>`).join('');
+        }
+
+        function selectProfile(i) {
+            curIdx = i; state.level = profiles[i].maxLvl;
+            document.getElementById('dash-name').innerText = profiles[i].name;
+            document.getElementById('profile-select-view').classList.add('hidden');
+            document.getElementById('profile-dash-view').classList.remove('hidden');
+            document.getElementById('btn-logout').classList.remove('hidden');
         }
 
         function editProfile(i) {
@@ -238,43 +224,16 @@
             document.getElementById('profile-create-view').classList.remove('hidden');
         }
 
-        function deleteProfile(i) {
-            if (confirm(i18n[lang].delConfirm)) {
-                profiles.splice(i, 1);
-                localStorage.setItem('blitz_v_final', JSON.stringify(profiles));
-                loadProfiles();
-            }
-        }
-
-        function showCreateView() {
-            editingIdx = -1;
-            document.getElementById('in-name').value = '';
-            document.getElementById('profile-select-view').classList.add('hidden');
-            document.getElementById('profile-create-view').classList.remove('hidden');
-        }
-
-        function cancelCreate() {
-            document.getElementById('profile-create-view').classList.add('hidden');
-            document.getElementById('profile-select-view').classList.remove('hidden');
-        }
-
+        function deleteProfile(i) { if(confirm("確定刪除? Delete?")) { profiles.splice(i,1); localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); loadProfiles(); } }
+        function showCreateView() { editingIdx = -1; document.getElementById('in-name').value = ''; document.getElementById('profile-select-view').classList.add('hidden'); document.getElementById('profile-create-view').classList.remove('hidden'); }
+        function cancelCreate() { document.getElementById('profile-create-view').classList.add('hidden'); document.getElementById('profile-select-view').classList.remove('hidden'); }
+        
         function saveProfile() {
-            const n = document.getElementById('in-name').value.trim();
-            if (!n) return;
-            if (editingIdx > -1) { profiles[editingIdx].name = n; }
-            else { profiles.push({ name: n, maxLvl: 1 }); }
+            const n = document.getElementById('in-name').value.trim(); if(!n) return;
+            if(editingIdx > -1) { profiles[editingIdx].name = n; }
+            else { profiles.push({name: n, maxLvl: 1}); }
             localStorage.setItem('blitz_v_final', JSON.stringify(profiles));
-            loadProfiles();
-            cancelCreate();
-        }
-
-        function selectProfile(i) {
-            curIdx = i;
-            state.level = profiles[i].maxLvl;
-            document.getElementById('dash-name').innerText = profiles[i].name;
-            document.getElementById('profile-select-view').classList.add('hidden');
-            document.getElementById('profile-dash-view').classList.remove('hidden');
-            document.getElementById('btn-logout').classList.remove('hidden');
+            location.reload();
         }
 
         function startAt(lvl) {
@@ -289,100 +248,97 @@
             clearInterval(gameTimer);
             state.found = 0; state.status = 'mem'; updateHint();
             document.getElementById('fail-screen').classList.add('hidden');
-            document.getElementById('timer-fill').style.width = "100%";
-
+            
             const tier = Math.floor((state.level - 1) / 10);
             const gridCells = Math.min(100, 25 + (tier * 15));
             const density = Math.min(0.40, 0.20 + (((state.level - 1) % 10) * 0.02));
             const tCount = Math.floor(gridCells * density);
-            const memTime = tCount;
-
-            initGrid(gridCells, tCount);
-            document.getElementById('msg').innerText = i18n[lang].mem(memTime);
-            document.getElementById('cur-lvl').innerText = state.level;
             
-            // 初始化顯示該關卡總秒數
-            const initialS = 3.0 + (tCount * 0.4);
-            document.getElementById('cur-time').innerText = initialS.toFixed(1);
+            initGrid(gridCells, tCount);
+            document.getElementById('cur-lvl').innerText = state.level;
+            document.getElementById('cur-time').innerText = (3.0 + tCount * 0.4).toFixed(1);
+            document.getElementById('timer-fill').style.width = "100%";
 
-            let remainingMem = memTime;
+            let remaining = tCount;
+            document.getElementById('msg').innerText = i18n[lang].mem(remaining);
             const memInterval = setInterval(() => {
-                remainingMem--;
-                if (remainingMem > 0) document.getElementById('msg').innerText = i18n[lang].mem(remainingMem);
+                remaining--;
+                if(remaining > 0) document.getElementById('msg').innerText = i18n[lang].mem(remaining);
+                else { clearInterval(memInterval); startPlay(tCount); }
             }, 1000);
-
-            setTimeout(() => {
-                clearInterval(memInterval);
-                state.status = 'play'; updateHint();
-                document.querySelectorAll('.cell').forEach(c => c.classList.remove('target'));
-                document.getElementById('msg').innerText = i18n[lang].go;
-                if (!isElderly) startCountdown(tCount);
-            }, memTime * 1000);
-        }
-
-        function startCountdown(tCount) {
-            const totalSeconds = 3.0 + (tCount * 0.4);
-            let s = totalSeconds;
-            gameTimer = setInterval(() => {
-                s -= 0.1;
-                document.getElementById('cur-time').innerText = Math.max(0, s).toFixed(1);
-                document.getElementById('timer-fill').style.width = (s / totalSeconds * 100) + "%";
-                if (s <= 0) { clearInterval(gameTimer); fail(); }
-            }, 100);
         }
 
         function initGrid(count, tCount) {
-            const g = document.getElementById('grid-container');
-            g.innerHTML = '';
+            const g = document.getElementById('grid-container'); g.innerHTML = '';
             const cols = Math.ceil(Math.sqrt(count));
             g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-            const p = Array.from({ length: count }, (_, i) => i + 1).sort(() => 0.5 - Math.random());
+            const p = Array.from({length: count}, (_, i) => i + 1).sort(() => 0.5 - Math.random());
             state.targets = p.slice(0, tCount);
-            for (let i = 1; i <= count; i++) {
-                const c = document.createElement('div');
-                c.className = 'cell'; c.innerText = i;
-                if (state.targets.includes(i)) c.classList.add('target');
+            for(let i=1; i<=count; i++) {
+                const c = document.createElement('div'); c.className = 'cell'; c.innerText = i;
+                if(state.targets.includes(i)) c.classList.add('target');
                 c.onclick = () => {
-                    if (state.status !== 'play' || c.classList.contains('correct')) return;
-                    if (state.targets.includes(i)) {
-                        c.classList.add('correct');
-                        state.found++; updateHint();
-                        if (state.found === state.targets.length) win();
-                    } else { c.classList.add('wrong'); if (!isElderly) fail(); }
+                    if(state.status !== 'play' || c.classList.contains('correct')) return;
+                    if(state.targets.includes(i)) {
+                        c.classList.add('correct'); state.found++; updateHint();
+                        if(state.found === state.targets.length) win();
+                    } else { c.classList.add('wrong'); if(!isElderly) fail(); }
                 };
                 g.appendChild(c);
             }
         }
 
-        function toggleElderly() {
-            isElderly = !isElderly;
-            document.getElementById('eld-toggle').innerText = isElderly ? i18n[lang].eldOn : i18n[lang].eldOff;
-            document.getElementById('timer-bar').style.visibility = isElderly ? 'hidden' : 'visible';
-            document.getElementById('timer-ui').style.visibility = isElderly ? 'hidden' : 'visible';
-            updateHint();
-        }
-
-        function updateHint() {
-            const box = document.getElementById('elderly-hint-box');
-            if (isElderly && state.status === 'play') {
-                box.innerText = i18n[lang].eldHint(state.found, state.targets.length - state.found);
-                box.style.display = 'block';
-            } else { box.style.display = 'none'; }
+        function startPlay(tCount) {
+            state.status = 'play'; updateHint();
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('target'));
+            document.getElementById('msg').innerText = "GO!";
+            if(!isElderly) {
+                const total = 3.0 + tCount * 0.4; let s = total;
+                gameTimer = setInterval(() => {
+                    s -= 0.1;
+                    document.getElementById('cur-time').innerText = Math.max(0, s).toFixed(1);
+                    document.getElementById('timer-fill').style.width = (s/total*100) + "%";
+                    if(s <= 0) fail();
+                }, 100);
+            }
         }
 
         function win() {
             clearInterval(gameTimer); state.status = 'idle'; updateHint();
-            document.getElementById('msg').innerText = i18n[lang].clear;
-            if (state.level % 10 === 0) {
-                const nextGrid = Math.min(100, 25 + (Math.floor(state.level / 10) * 15));
-                document.getElementById('tier-report').innerText = i18n[lang].tierMsg(state.level + 1, nextGrid);
+            document.getElementById('msg').innerText = "CLEAR!";
+            if(state.level % 10 === 0) {
+                const nextLvl = state.level + 1;
+                const nextTier = Math.floor((nextLvl - 1) / 10);
+                const nextGrids = Math.min(100, 25 + (nextTier * 15));
+                const nextTargets = Math.floor(nextGrids * 0.20);
+                document.getElementById('tier-report').innerHTML = i18n[lang].tierMsg(nextLvl, nextTargets, nextGrids);
                 document.getElementById('tier-screen').classList.remove('hidden');
             } else { state.level++; save(); setTimeout(runRound, 1000); }
         }
 
         function closeTierGate() { state.level++; save(); document.getElementById('tier-screen').classList.add('hidden'); runRound(); }
-        function save() { if (curIdx !== -1 && state.level > profiles[curIdx].maxLvl) { profiles[curIdx].maxLvl = state.level; localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); } }
         function fail() { clearInterval(gameTimer); state.status = 'idle'; updateHint(); document.getElementById('fail-screen').classList.remove('hidden'); }
+        function save() { if(curIdx > -1 && state.level > profiles[curIdx].maxLvl) { profiles[curIdx].maxLvl = state.level; localStorage.setItem('blitz_v_final', JSON.stringify(profiles)); } }
+
+        function toggleElderly() {
+            isElderly = !isElderly; updateHint();
+            document.getElementById('timer-bar').style.visibility = isElderly ? 'hidden' : 'visible';
+            document.getElementById('eld-toggle').innerText = isElderly ? "長者模式: 開" : "長者模式: 關";
+        }
+
+        function updateHint() {
+            const b = document.getElementById('elderly-hint-box');
+            if(isElderly && state.status === 'play') {
+                b.innerText = i18n[lang].eldHint(state.found, state.targets.length - state.found);
+                b.style.display = 'block';
+            } else b.style.display = 'none';
+        }
+
+        function shareGame() {
+            const url = window.location.href;
+            const text = i18n[lang].shareMsg(state.level) + url;
+            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard! 已複製連結！"));
+        }
 
         loadProfiles();
     </script>
